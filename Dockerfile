@@ -18,21 +18,18 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv E1DD270288B4E60
  && sudo -HEu ${GITLAB_CI_MULTI_RUNNER_USER} ln -sf ${GITLAB_CI_MULTI_RUNNER_DATA_DIR}/.ssh ${GITLAB_CI_MULTI_RUNNER_HOME_DIR}/.ssh \
  && rm -rf /var/lib/apt/lists/*
 
-ENV MAVEN_HOME=/usr/share/maven
-RUN cd /tmp \
-   && wget https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz \
-   && wget https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz.sha1 \
-   && echo -e "$(cat apache-maven-3.3.9-bin.tar.gz.sha1)  apache-maven-3.3.9-bin.tar.gz" | sha1sum -c - \
-   && tar zxf apache-maven-3.3.9-bin.tar.gz \
-   && rm -rf apache-maven-3.3.9-bin.tar.gz \
-   && rm -rf *.sha1 \
-   && mv ./apache-maven-3.3.9 /usr/share/maven \
-   && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+# get maven
+RUN wget --no-verbose -O /tmp/apache-maven-3.3.9.tar.gz http://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
 
-RUN apt-get install -y git wget nano
+# verify checksum
+RUN echo "516923b3955b6035ba6b0a5b031fbd8b /tmp/apache-maven-3.3.9.tar.gz" | md5sum -c
 
-# remove download archive files
-RUN apt-get clean
+# install maven
+RUN tar xzf /tmp/apache-maven-3.3.9.tar.gz -C /opt/
+RUN ln -s /opt/apache-maven-3.3.9 /opt/maven
+RUN ln -s /opt/maven/bin/mvn /usr/local/bin
+RUN rm -f /tmp/apache-maven-3.3.9.tar.gz
+ENV MAVEN_HOME /opt/maven
 
 # set shell variables for java installation
 ENV java_version 1.8.0_77
